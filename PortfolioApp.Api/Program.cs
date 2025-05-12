@@ -32,7 +32,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigins", policy =>
     {
-        policy.WithOrigins("http://localhost:4200", "https://black-ground-05c9fc41e.6.azurestaticapps.net")
+        policy.WithOrigins("http://localhost:4200", "https://red-bay-051420710.6.azurestaticapps.net/")
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
