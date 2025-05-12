@@ -47,7 +47,20 @@ namespace PortfolioApp.Api.Controllers
         public async Task<IActionResult> UpdateSurvey(string urlName, [FromBody] UpdateSurveyDto dto)
         {
             var updatedSurvey = await _surveyService.UpdateSurveyAsync(dto);
+
+            if (updatedSurvey == null)
+                return NotFound();
+
             return Ok(updatedSurvey);
+        }
+        [HttpDelete("{urlName}")]
+        public async Task<IActionResult> DeleteItem(string urlName)
+        {
+            var success = await _surveyService.DeleteSurveyAsync(urlName);
+            if (!success)
+                return NotFound();
+
+            return NoContent();
         }
     }
 }

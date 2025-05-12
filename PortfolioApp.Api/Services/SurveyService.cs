@@ -19,10 +19,9 @@ namespace PortfolioApp.Api.Services
         public async Task<SurveyDetailsDto?> GetSurveyWithQuestionsByUrlNameAsync(string urlName)
         {
             var survey = await _context.Surveys
-                .Where(e => e.Creator == _currentUserService.GetEmail())
                 .Include(s => s.SurveyQuestions)
                 .ThenInclude(r => r.SurveyResponses)
-                .FirstOrDefaultAsync(s => s.UrlName == urlName);
+                .FirstOrDefaultAsync(s => s.Creator == _currentUserService.GetEmail() && s.UrlName == urlName);
 
             if (survey == null)
                 return null;
@@ -44,6 +43,33 @@ namespace PortfolioApp.Api.Services
                 .ToHashSetAsync();
             return existingSlugs;
         }
+        public async Task<bool> DeleteSurveyAsync(string urlName)
+        {
+            var survey = await _context.Surveys
+                    .Include(s => s.SurveyQuestions)
+                    .ThenInclude(q => q.SurveyResponses)
+                    .FirstOrDefaultAsync(s => s.UrlName == urlName && s.Creator == _currentUserService.GetEmail());
+
+            if (survey == null)
+            {
+                return false;
+            }
+
+            foreach (var existingQuestion in survey.SurveyQuestions.ToList())
+            {
+                // Manually delete responses first
+                foreach (var response in existingQuestion.SurveyResponses.ToList())
+                {
+                    _context.SurveyResponses.Remove(response);
+                }
+
+                _context.SurveyQuestions.Remove(existingQuestion);
+            }
+            _context.Surveys.Remove(survey);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
         public async Task<SurveyDto> UpdateSurveyAsync(UpdateSurveyDto dto)
         {
             bool isEditMode = dto.Id != null;
@@ -53,10 +79,14 @@ namespace PortfolioApp.Api.Services
             if (isEditMode)
             {
                 survey = await _context.Surveys
-                    .Where(e => e.Creator == _currentUserService.GetEmail())
                     .Include(s => s.SurveyQuestions)
                         .ThenInclude(q => q.SurveyResponses)
-                    .FirstOrDefaultAsync(s => s.Id == dto.Id.Value);
+                    .FirstOrDefaultAsync(s => s.Creator == _currentUserService.GetEmail() && s.Id == dto.Id.Value);
+
+                if (survey == null)
+                {
+                    return null;
+                }
 
                 var uniqueSlug = await Utils.GenerateUniqueSlug(dto.Name, survey, GetExistingSurveyUrlNames);
 
