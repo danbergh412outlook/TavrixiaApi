@@ -15,7 +15,7 @@ if (!isDevelopment)
 {
     builder.Configuration.AddAzureKeyVault(
     new Uri("https://tavrixia-key-vault.vault.azure.net/"),
-    new DefaultAzureCredential());
+    new ManagedIdentityCredential());
 }
 
 builder.Services.AddDbContext<AppDbContext>(options =>

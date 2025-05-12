@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web.Resource;
+using PortfolioApp.Api.Data;
+using PortfolioApp.Api.Services;
 using System.Security.Claims;
 
 namespace PortfolioApp.Api.Controllers
@@ -19,27 +22,26 @@ namespace PortfolioApp.Api.Controllers
 
         private readonly ILogger<WeatherForecastController> _logger;
         private readonly IConfiguration _configuration;
+        private readonly AppDbContext _context;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger, IConfiguration configuration)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, IConfiguration configuration, AppDbContext context)
         {
             _logger = logger;
             _configuration = configuration;
+            _context = context;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
+        [AllowAnonymous]
+        public async Task<IEnumerable<WeatherForecast>> Get()
         {
-            var secretValue2 = _configuration["AllowedHosts"];
-            var secretValue = _configuration["ConnectionStrings--TavrixiaDb"];
-            var secretValue3 = _configuration["Testy"];
-            var secretValu4 = _configuration["ConnectionStrings:TavrixiaDb"];
-            var secretValue5 = _configuration.GetConnectionString("TavrixiaDb");
-
+            var survey = await _context.Surveys
+                .FirstOrDefaultAsync();
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
                 Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
                 TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+                Summary = survey?.Name ?? "No Survey"
             })
             .ToArray();
         }
