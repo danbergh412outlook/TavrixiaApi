@@ -11,9 +11,9 @@ namespace PortfolioApp.Api.Controllers
     [Authorize]
     public class SurveysController : ControllerBase
     {
-        private readonly SurveyService _surveyService;
+        private readonly ISurveyService _surveyService;
 
-        public SurveysController(SurveyService surveyService)
+        public SurveysController(ISurveyService surveyService)
         {
             _surveyService = surveyService;
         }
@@ -26,9 +26,9 @@ namespace PortfolioApp.Api.Controllers
             return Ok(surveys);
         }
         [HttpGet("{urlName}")]
-        public async Task<ActionResult<SurveyDetailsDto>> GetSurveyByUrlName(string urlName)
+        public async Task<ActionResult<SurveyDto>> GetSurveyByUrlName(string urlName)
         {
-            var result = await _surveyService.GetSurveyWithQuestionsByUrlNameAsync(urlName);
+            var result = await _surveyService.GetSurveyDtoWithQuestionsByUrlNameAsync(urlName);
 
             if (result == null)
                 return NotFound();

@@ -1,7 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace PortfolioApp.Api.Models
 {
+    [Index(nameof(UserSurveyId), nameof(SurveyResponseId), IsUnique = true)]
     public class UserResponse
     {
         public int Id { get; set; }

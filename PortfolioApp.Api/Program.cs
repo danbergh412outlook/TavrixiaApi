@@ -1,10 +1,12 @@
 using Azure.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
 using PortfolioApp.Api.Data;
+using PortfolioApp.Api.Extensions;
 using PortfolioApp.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,8 +25,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         sql => sql.CommandTimeout(180)));
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<SurveyService>();
-builder.Services.AddScoped<CurrentUserService>();
+builder.Services.AddAppServices();
 
 // Add services to the container.
 
@@ -64,6 +65,31 @@ builder.Services.AddAuthorization(); // Enable authorization
 
 
 builder.Services.AddControllers();
+
+if (isDevelopment)
+{
+    builder.Services.Configure<ApiBehaviorOptions>(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(e => e.Value?.Errors.Count > 0)
+                .Select(e => new
+                {
+                    Field = e.Key,
+                    Errors = e.Value?.Errors.Select(err => err.ErrorMessage)
+                });
+
+            return new BadRequestObjectResult(new
+            {
+                Message = "Model validation failed",
+                Errors = errors
+            });
+        };
+    });
+}
+
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

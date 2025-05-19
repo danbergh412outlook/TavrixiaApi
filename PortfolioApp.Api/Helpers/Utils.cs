@@ -6,19 +6,19 @@ namespace PortfolioApp.Api.Helpers
 {
     public class Utils
     {
-        public static async Task<string> GenerateUniqueSlug(string newName, Survey? survey, Func<string, int?, Task<HashSet<string>>> getExistingSlugs)
+        public static async Task<string> GenerateUniqueSlug(string newName, string oldName, string oldSlug, int? id, Func<string, int?, Task<HashSet<string>>> getExistingSlugs)
         {
-            if (newName != survey?.Name)
+            if (newName != oldName)
             {
                 var newSlug = Slugify(newName);
-                var currentSlug = Slugify(survey?.Name);
+                var currentSlug = Slugify(oldName);
 
                 if (newSlug != currentSlug)
                 {
                     string uniqueSlug = newSlug;
                     int counter = 1;
 
-                    var existingSlugs = await getExistingSlugs(newSlug, survey?.Id);
+                    var existingSlugs = await getExistingSlugs(newSlug, id);
 
                     while (existingSlugs.Contains(uniqueSlug))
                     {
@@ -30,7 +30,7 @@ namespace PortfolioApp.Api.Helpers
                 }
             }
 
-            return survey.UrlName;
+            return oldSlug;
         }
         public static string Slugify(string text)
         {
@@ -38,11 +38,18 @@ namespace PortfolioApp.Api.Helpers
                 return string.Empty;
 
             text = text.ToLowerInvariant();
-            text = Regex.Replace(text, @"[^a-z0-9\s-]", "");         // Remove invalid chars
-            text = Regex.Replace(text, @"\s+", "-").Trim('-');      // Replace spaces with hyphens
-            text = Regex.Replace(text, @"-+", "-");                 // Remove multiple hyphens
 
-            return text;
+            // Step 1: Replace common word separators with space
+            text = Regex.Replace(text, @"[\/_|+&:]", " ");
+
+            // Step 2: Remove all remaining invalid characters (anything not a-z, 0-9, space or hyphen)
+            text = Regex.Replace(text, @"[^a-z0-9 -]", "");
+
+            // Step 3: Collapse multiple spaces or hyphens into a single hyphen
+            text = Regex.Replace(text, @"[\s-]+", "-");
+
+            // Step 4: Trim leading/trailing hyphens
+            return text.Trim('-');
         }
     }
 }

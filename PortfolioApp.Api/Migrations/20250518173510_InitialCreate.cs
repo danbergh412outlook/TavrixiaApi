@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace PortfolioApp.Api.Migrations
 {
     /// <inheritdoc />
@@ -12,19 +14,75 @@ namespace PortfolioApp.Api.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "AppUsers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Email = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    UrlName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AppUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ResponseStatuses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ResponseStatuses", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SurveyStatuses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SurveyStatuses", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Surveys",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Creator = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    AppUserId = table.Column<int>(type: "int", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateCompleted = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    UrlName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
+                    UrlName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    AllowEmulation = table.Column<bool>(type: "bit", nullable: false),
+                    SurveyStatusId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Surveys", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Surveys_AppUsers_AppUserId",
+                        column: x => x.AppUserId,
+                        principalTable: "AppUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Surveys_SurveyStatuses_SurveyStatusId",
+                        column: x => x.SurveyStatusId,
+                        principalTable: "SurveyStatuses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -53,13 +111,28 @@ namespace PortfolioApp.Api.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserEmail = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    AppUserId = table.Column<int>(type: "int", nullable: false),
                     SurveyId = table.Column<int>(type: "int", nullable: false),
-                    DateTaken = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    DateTaken = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    SurveyToken = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsEmulation = table.Column<bool>(type: "bit", nullable: false),
+                    ResponseStatusId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_UserSurveys", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserSurveys_AppUsers_AppUserId",
+                        column: x => x.AppUserId,
+                        principalTable: "AppUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_UserSurveys_ResponseStatuses_ResponseStatusId",
+                        column: x => x.ResponseStatusId,
+                        principalTable: "ResponseStatuses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_UserSurveys_Surveys_SurveyId",
                         column: x => x.SurveyId,
@@ -135,6 +208,38 @@ namespace PortfolioApp.Api.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.InsertData(
+                table: "ResponseStatuses",
+                columns: new[] { "Id", "Name" },
+                values: new object[,]
+                {
+                    { 1, "Not Started" },
+                    { 2, "In Progress" },
+                    { 3, "Completed" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "SurveyStatuses",
+                columns: new[] { "Id", "Name" },
+                values: new object[,]
+                {
+                    { 1, "Draft" },
+                    { 2, "In Progress" },
+                    { 3, "Completed" }
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AppUsers_Email",
+                table: "AppUsers",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AppUsers_UrlName",
+                table: "AppUsers",
+                column: "UrlName",
+                unique: true);
+
             migrationBuilder.CreateIndex(
                 name: "IX_SurveyQuestions_SurveyId",
                 table: "SurveyQuestions",
@@ -149,6 +254,16 @@ namespace PortfolioApp.Api.Migrations
                 name: "IX_SurveyResponses_SurveyQuestionId",
                 table: "SurveyResponses",
                 column: "SurveyQuestionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Surveys_AppUserId",
+                table: "Surveys",
+                column: "AppUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Surveys_SurveyStatusId",
+                table: "Surveys",
+                column: "SurveyStatusId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Surveys_UrlName",
@@ -172,9 +287,21 @@ namespace PortfolioApp.Api.Migrations
                 column: "SurveyResponseId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserSurveyResponses_UserSurveyId",
+                name: "IX_UserSurveyResponses_UserSurveyId_SurveyResponseId",
                 table: "UserSurveyResponses",
-                column: "UserSurveyId");
+                columns: new[] { "UserSurveyId", "SurveyResponseId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserSurveys_AppUserId_SurveyId",
+                table: "UserSurveys",
+                columns: new[] { "AppUserId", "SurveyId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserSurveys_ResponseStatusId",
+                table: "UserSurveys",
+                column: "ResponseStatusId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserSurveys_SurveyId",
@@ -198,7 +325,16 @@ namespace PortfolioApp.Api.Migrations
                 name: "SurveyQuestions");
 
             migrationBuilder.DropTable(
+                name: "ResponseStatuses");
+
+            migrationBuilder.DropTable(
                 name: "Surveys");
+
+            migrationBuilder.DropTable(
+                name: "AppUsers");
+
+            migrationBuilder.DropTable(
+                name: "SurveyStatuses");
         }
     }
 }

@@ -7,12 +7,11 @@ namespace PortfolioApp.Api.Models
     public class Survey
     {
         public int Id { get; set; }
-
         [Required]
-        [MaxLength(50)]
-        public string Creator { get; set; }
+        public int AppUserId { get; set; }
         [Required]
         public DateTime DateCreated { get; set; }
+        public DateTime DateCompleted { get; set; }
         [Required]
         [MaxLength(100)]
         public string Name { get; set; }
@@ -20,8 +19,14 @@ namespace PortfolioApp.Api.Models
         [Required]
         [MaxLength(100)]
         public string UrlName { get; set; }
+        [Required]
+        public bool AllowEmulation { get; set; }
+        [Required]
+        public int SurveyStatusId { get; set; }
 
         public ICollection<SurveyQuestion> SurveyQuestions { get; set; }
         public ICollection<UserSurvey> UserSurveys { get; set; }
+        public AppUser AppUser { get; set; }
+        public SurveyStatus SurveyStatus { get; set; }
     }
 }

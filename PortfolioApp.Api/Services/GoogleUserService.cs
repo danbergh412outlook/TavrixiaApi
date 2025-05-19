@@ -2,11 +2,11 @@
 
 namespace PortfolioApp.Api.Services
 {
-    public class CurrentUserService
+    public class GoogleUserService : IGoogleUserService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public CurrentUserService(IHttpContextAccessor httpContextAccessor)
+        public GoogleUserService(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
         }
@@ -18,6 +18,14 @@ namespace PortfolioApp.Api.Services
                 return null;
 
             return user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+        }
+        public string? GetFullName()
+        {
+            var user = _httpContextAccessor.HttpContext?.User;
+            if (user == null || !(user.Identity?.IsAuthenticated ?? false))
+                return null;
+
+            return user.Claims.FirstOrDefault(c => c.Type == "name")?.Value;
         }
     }
 }
